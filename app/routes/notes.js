@@ -13,7 +13,7 @@ router.post('/', WithAuth, async (req, res) => {
   } catch (error) {
     res.status(500).json({error: 'Problem to create a new note'});
   }
-})
+});
 
 router.get('/:id', WithAuth, async function(req, res) {
   try {
@@ -35,7 +35,26 @@ router.get('/', WithAuth, async function(req, res) {
   } catch (error) {
     res.json({error: error}).status(500)
   }
-})
+});
+
+router.put('/:id', WithAuth, async function(req, res) {
+  const { title, body } = req.body;
+  const { id } = req.params;
+
+  try {
+    let note = await Note.findById(id);
+    if(is_owner(req.user, note)){
+      let note = await Note.findOneAndUpdate(id,
+      { $set: { title: title, body: body }},
+      { upsert: true, 'new': true }
+    );
+    res.json(note);
+      } else
+        res.status(403).json({error: "Permission danied"});
+  } catch (error) {
+    res.status(500).json({error: "Problem to update a note"});
+  }
+});
 
 const is_owner = (user, note) => {
   if(JSON.stringify(user._id) == JSON.stringify(note.author._id))
