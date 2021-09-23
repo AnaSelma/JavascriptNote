@@ -70,6 +70,18 @@ router.delete('/:id', WithAuth, async(req, res) => {
   }
 });
 
+router.get('/search', WithAuth, async function(req, res) {
+  const { query } = req.query;
+  try {
+    let notes = await Note
+      .find({author: req.user._id})
+      .find({$text: {$search: query}});
+    res.json(notes);
+  } catch (error) {
+    res.json({error: error}).status(500);
+  }
+});
+
 const is_owner = (user, note) => {
   if(JSON.stringify(user._id) == JSON.stringify(note.author._id))
     return true;
